@@ -198,8 +198,15 @@ def check_tower(path, t, m, doc):
     f = path.relative_to(ROOT).as_posix()
     nz = nozzle_of(path)
     lh = LAYER[nz]
-    hot, cold = map(int, re.match(r"temp_tower_(\d+)-(\d+)_", path.name).groups())
-    rows = parse_tower_table(doc, path.name)
+    hot, cold = map(int, re.match(r"temp_tower_(?:compact_)?(\d+)-(\d+)_", path.name).groups())
+    compact = path.name.startswith("temp_tower_compact_")
+    if compact:   # no doc table: the table is computed by tests-src/temp_tower_compact.py (used by build_3mf.py)
+        sys.path.insert(0, str(ROOT / "tests-src"))
+        import temp_tower_compact as tc
+        rows = [(k, z0, z1, temp, ins, None if ins is None else temp)
+                for k, z0, z1, temp, ins in tc.tower_table_compact(hot, cold)]
+    else:
+        rows = parse_tower_table(doc, path.name)
     if not rows:
         log(f, "FAIL", "no height table for this file in docs/tests-temp-stringing.md")
         return
@@ -228,7 +235,7 @@ def check_tower(path, t, m, doc):
     # geometry: window centre is open mid-block, closed by the deck at the block top
     sys.path.insert(0, str(ROOT / "tests-src"))
     import temp_stringing as ts  # tower dimensions only (deck thickness, window position)
-    p = ts.TOWER[nz]
+    p = tc.COMPACT_02 if compact else ts.TOWER[nz]
     gx_min = -p.ho45 - p.margin
     gx_max = p.Wc + p.Lb + p.Wp + p.ho60 * math.tan(math.radians(60)) + p.margin
     xc = (p.Wc + p.Lb / 2) - (gx_min + gx_max) / 2
@@ -250,7 +257,7 @@ def check_tower(path, t, m, doc):
     if ang != [45.0, 60.0]:
         problems.append(f"wedge angles {ang} != [45, 60]")
     log(f, "FAIL" if problems else "PASS",
-        f"tower {hot}->{cold}: {len(rows)} blocks match the doc table (heights, M104 S/Z), "
+        f"tower {hot}->{cold}: {len(rows)} blocks match the {'computed' if compact else 'doc'} table (heights, M104 S/Z), "
         f"decks close every block, wedges 45/60 deg" if not problems else "; ".join(problems))
 
 

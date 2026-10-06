@@ -65,7 +65,7 @@ Mass is approximate solid volume x 1.24 g/cm³; the printed part weighs less (15
 
 | Filament | 0.4 nozzle | 0.2 nozzle |
 |---|---|---|
-| ELEGOO Matte PLA (purple, reference) | `temp_tower_230-190_0.4.stl` | `temp_tower_230-190_0.2.stl` |
+| ELEGOO Matte PLA (purple, reference) | `temp_tower_230-190_0.4.stl` | `temp_tower_compact_230-190_0.2.stl` (4 mm blocks, 28.8 x 9 x 36.6 mm, about 1 h 10 min; generator `tests-src/temp_tower_compact.py`) |
 | ELEGOO PLA | `temp_tower_230-190_0.4.stl` | `temp_tower_225-195_0.2.stl` |
 | ELEGOO PLA+ | `temp_tower_235-200_0.4.stl` | `temp_tower_230-200_0.2.stl` |
 | ELEGOO Rapid PLA+ | `temp_tower_235-200_0.4.stl` | `temp_tower_230-200_0.2.stl` |

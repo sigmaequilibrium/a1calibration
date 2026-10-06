@@ -66,7 +66,8 @@ PLATE = "Textured PEI Plate"    # the plate the A1 ships with
 ZIP_DATE = (2026, 1, 1, 0, 0, 0)
 
 sys.path.insert(0, str(ROOT / "tests-src"))
-import temp_stringing as ts      # noqa: E402  (read-only: tower geometry + height tables)
+import temp_stringing as ts
+import temp_tower_compact as tc      # noqa: E402  (read-only: tower geometry + height tables)
 
 NOZZLES = {
     # nozzle: (layer height, printer preset, process preset, filament suffix)
@@ -215,9 +216,8 @@ def tower_filament(hot: int, cold: int) -> tuple[str, str]:
     return "PETG", "Generic PETG"
 
 
-def tower_gcodes(nz: str, hot: int, cold: int) -> list[tuple[float, str]]:
-    p = ts.TOWER[nz]
-    rows = ts.tower_table(p, hot, cold)
+def tower_gcodes(nz: str, hot: int, cold: int, compact: bool = False) -> list[tuple[float, str]]:
+    rows = tc.tower_table_compact(hot, cold) if compact else ts.tower_table(ts.TOWER[nz], hot, cold)
     return [(round(z, 4), f"M104 S{t}") for _, _, _, t, z in rows if z is not None]
 
 
@@ -284,6 +284,11 @@ def projects_for(nz: str) -> tuple[list[Project], list[str]]:
                                                                detect_thin_wall="0", **comp), (CX + dx, CY)),
         ]))
 
+    f = pick(rf"cube_20mm_{re.escape(nz)}\.stl")
+    if f:   # plain 20 mm cube for caliper checks (X, Y, Z)
+        projs.append(Project(nz, f.stem, [Obj(f, f.stem, base_over(
+            nz, wall_loops=w(3, 4), sparse_infill_density="15%", brim_type="no_brim"))]))
+
     for stem in ("stringing_pins", "retraction_coupon"):
         f = pick(rf"{stem}_{re.escape(nz)}\.stl")
         if f:
@@ -297,14 +302,24 @@ def projects_for(nz: str) -> tuple[list[Project], list[str]]:
         hot, cold = int(m.group(1)), int(m.group(2))
         if m.group(3) != nz:
             raise SystemExit(f"{f}: nozzle mismatch")
+        compact = name.startswith("temp_tower_compact_")
         ftype, fbase = tower_filament(hot, cold)
+        over = base_over(nz, wall_loops=2, sparse_infill_density="15%", seam_position="back", brim_type="no_brim")
         projs.append(Project(
-            nz, f.stem,
-            [Obj(f, f.stem, base_over(nz, wall_loops=2, sparse_infill_density="15%",
-                                      seam_position="back", brim_type="no_brim"))],
+            nz, f.stem, [Obj(f, f.stem, over)],
             fil_type=ftype, filament=f"{fbase} {NOZZLES[nz][3]}",
             fil_over={"nozzle_temperature": str(hot), "nozzle_temperature_initial_layer": str(hot)},
-            gcodes=tower_gcodes(nz, hot, cold)))
+            gcodes=tower_gcodes(nz, hot, cold, compact)))
+        if (hot, cold) == (230, 190) and compact == (nz == "0.2"):
+            # ELEGOO Matte PLA purple reference run, R2 (docs/reference-offset-method.md 2.2):
+            # the compact tower on the 0.2 nozzle, the normal tower on the 0.4
+            projs.append(Project(
+                nz, f"R2_matte-purple_{f.stem}", [Obj(f, f.stem, over)],
+                fil_type=ftype, filament=f"{fbase} {NOZZLES[nz][3]}",
+                fil_over={"nozzle_temperature": str(hot), "nozzle_temperature_initial_layer": str(hot),
+                          "textured_plate_temp": "60", "textured_plate_temp_initial_layer": "60",
+                          "filament_density": "1.26"},
+                gcodes=tower_gcodes(nz, hot, cold, compact)))
 
     skipped = [n for n in files if n not in used]
     return projs, skipped
@@ -611,7 +626,7 @@ def main() -> int:
             rep = build_project(prof, pr, version, dest)
             errs = validate(dest, rep)
             m = TOWER_RE.match(pr.objects[0].stl.name)
-            if m and pr.gcodes:
+            if m and pr.gcodes and not pr.objects[0].stl.name.startswith("temp_tower_compact_"):
                 errs += check_against_markdown(nz, int(m.group(1)), int(m.group(2)), pr.gcodes)
                 if a.studio:
                     errs += studio_slice_check(Path(a.studio), dest, pr.gcodes, Path(tempfile.gettempdir()) / "a1cal_3mf_slice")

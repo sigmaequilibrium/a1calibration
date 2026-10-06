@@ -57,7 +57,7 @@ Project files are `3mf/<n>/<stl name>.3mf` (for example `3mf/0.4/temp_tower_230-
 | # | Step | 0.4 file / tool | 0.2 file / tool | Record |
 |---|---|---|---|---|
 | R1 | First layer | `dim01_first-layer-squares_0.4n_h0.20` | `dim01_first-layer-squares_0.2n_h0.10` | pass / notes |
-| R2 | Temperature tower (set the preset temp to 230 before slicing) | `temp_tower_230-190_0.4` | `temp_tower_230-190_0.2` | **T_ref** and the usable window **T_min…T_max** (coldest block that bonds, hottest with acceptable bridge, overhang and gloss) |
+| R2 | Temperature tower (set the preset temp to 230 before slicing) | `temp_tower_230-190_0.4` | `temp_tower_compact_230-190_0.2` (project `R2_matte-purple_temp_tower_compact_230-190_0.2`: 28.8 x 9 x 36.6 mm, about 1 h 10 min, same 230 → 190 range) | **T_ref** and the usable window **T_min…T_max** (coldest block that bonds, hottest with acceptable bridge, overhang and gloss) |
 | R3 | Flow Dynamics, provisional | Calibration tab > Flow Dynamics > **Auto** | Calibration tab > Flow Dynamics > **Manual**, range 0→0.20 step 0.01 | K (provisional) |
 | R4 | Flow ratio, coarse then fine (read the matte surface as in §2.3) | Calibration tab > Flow Rate > Manual | same | **FR_ref** |
 | R5 | Max volumetric speed at T_ref (MVS = start + height × step; use 90 %) | Dev menu > Calibration > More > Max flowrate, 10→24 step 1 | same, 1.0→5.0 step 0.25 | **MVS_ref** |
