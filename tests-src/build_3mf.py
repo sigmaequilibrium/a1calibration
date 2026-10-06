@@ -250,6 +250,15 @@ def projects_for(nz: str) -> tuple[list[Project], list[str]]:
         if f:
             dim_files[key] = (f, over)
             projs.append(Project(nz, f.stem, [Obj(f, f.stem, over)]))
+    # ELEGOO Matte PLA purple reference run, R1 (docs/filament-settings.md section 0, docs/reference-offset-method.md 2.2)
+    if "dim01" in dim_files:
+        f1, o1 = dim_files["dim01"]
+        t0 = {"0.4": "215", "0.2": "210"}[nz]
+        projs.append(Project(nz, f"R1_matte-purple_{f1.stem}", [Obj(f1, f1.stem, o1)], fil_over={
+            "nozzle_temperature": t0, "nozzle_temperature_initial_layer": t0,
+            "textured_plate_temp": "60", "textured_plate_temp_initial_layer": "60",
+            "filament_density": "1.26",
+        }))
     # dim02 + dim03 + dim05 share one plate (docs/tests-dimensional.md)
     if all(k in dim_files for k in ("dim02", "dim03", "dim05")):
         f2, o2 = dim_files["dim02"]; f3, o3 = dim_files["dim03"]; f5, o5 = dim_files["dim05"]
