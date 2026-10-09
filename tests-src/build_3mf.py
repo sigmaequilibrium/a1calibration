@@ -75,6 +75,7 @@ NOZZLES = {
     "0.2": (0.10, "Bambu Lab A1 0.2 nozzle", "0.10mm Standard @BBL A1 0.2 nozzle", "@BBL A1 0.2 nozzle"),
 }
 COLOURS = {"PLA": "#00AE42", "PETG": "#1F79E5"}
+VECTOR_KEYS = {"enable_pressure_advance", "pressure_advance"}   # Orca filament keys absent from the BBL presets
 
 
 # --------------------------------------------------------------------------- system presets
@@ -154,7 +155,7 @@ def project_settings(prof: Profiles, nozzle: str, filament: str, fil_type: str,
     cfg.update(prof.resolve("process", process))
     fil = prof.resolve("filament", filament)
     for k, v in fil_over.items():
-        fil[k] = [v] if isinstance(fil.get(k), list) else v
+        fil[k] = [v] if isinstance(fil.get(k), list) or k in VECTOR_KEYS else v
     cfg.update(fil)
     cfg.update({
         "name": "project_settings",
@@ -514,7 +515,8 @@ def validate(path: Path, rep: dict) -> list[str]:
                 except Exception as e:  # noqa: BLE001
                     errs.append(f"{n}: XML error {e}")
         json.loads(z.read("Metadata/project_settings.config"))
-        objs = sorted(n for n in names if n.startswith("3D/Objects/"))
+        objs = sorted((n for n in names if n.startswith("3D/Objects/")),
+                      key=lambda n: int(re.search(r"object_(\d+)", n).group(1)))
         for n, o in zip(objs, rep["objects"]):
             doc = minidom.parseString(z.read(n))
             nv = len(doc.getElementsByTagName("vertex"))

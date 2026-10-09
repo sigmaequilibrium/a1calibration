@@ -93,13 +93,13 @@ Bambu's wiki method compares gloss and smoothness under raking light. A matte fi
 |---|---|---|---|---|
 | Colour / lot / date / firmware / Studio version | — | | | |
 | Filament diameter, mean of 10 | d_ref | | (same spool) | |
-| Nozzle temp, chosen | T_ref | | | |
+| Nozzle temp, chosen | T_ref | | **190 °C** (user, R2 compact tower 230→190, 2026-10-07; bottom edge of the tower, first layer 195 °C; window floor not yet bracketed) | |
 | Usable window | T_min…T_max | | | |
 | Bed temp (plate) | — | | | |
-| Flow ratio | FR_ref | | | coarse result → fine result |
-| Max volumetric speed (90 % value) | MVS_ref | | | raw knee: |
+| Flow ratio | FR_ref | | **coarse (2026-10-07, 190 °C, K 0.10, first layer 210 °C): best +5 % on filament 0.98, i.e. 0.98 × 1.05 ≈ 1.03; −20…−5 under-extruded (ridged), 0 and +10 near, +15/+20 blotchy over-extrusion.** Fine pass pending (0…+9 %, tests-src/flow_ratio_fine.py) | coarse result → fine result |
+| Max volumetric speed (90 % value) | MVS_ref | | **>= 3.0** (user, R5 vase tower 1.0 to 3.0 mm³/s at 190 °C, K 0.10, 2026-10-07, no failure up to the top; preset cap set to 2.5, true knee not found) | raw knee: not reached |
 | MVS at T_ref + 10 | MVS₊₁₀, slope s | | | |
-| K, auto (0.4) / manual (0.2) | K_ref | | | |
+| K, auto (0.4) / manual (0.2) | K_ref | | **about 0.04** (provisional; the chevron photos gave 0.10, later tests did not support it; the pa_tower / pa_extreme reading was not recorded; the REF preset JSON still says 0.10) | |
 | K, manual pattern (0.4) | K_ref,man | | — | auto/manual = |
 | Retraction: shortest clean / chosen | R_min / R_ref | | | |
 | Fan min/max/overhang used, verdict | — | | | |
@@ -108,8 +108,39 @@ Bambu's wiki method compares gloss and smoothness under raking light. A matte fi
 | X-Y contour compensation | dC | | | process preset |
 | X-Y hole compensation | dH | | | process preset |
 | Elephant foot | EF | | | process preset |
-| Fit: slip / running clearance | g_slip / g_run | | | |
+| Fit: slip / running clearance | g_slip / g_run | | **g_run 0.05 mm per side** (2026-10-07, dim04 D3, 0.10 mm layers, 190 °C: 0.025 slides, 0.05 tight in a good way, 0.075 clips, 0.10 slightly clips). Confirmed on the Bingo 8 mm screws ("1st pair perfect fit", 2026-10-08) | |
 | verify_combo | pass/fail | | | |
+
+### 2.5 Other colours used in the Bingo set (0.2 mm nozzle, Orca user presets, read 2026-10-09)
+
+Only the Matte Purple reference was measured on this printer. The other colours use the older Bingo profile values, which are **not** measurements from this calibration run. Nothing below was tested per colour, and none of it is recalibrated with the reference's 190 °C / flow 1.03.
+
+| Colour (preset) | Status in the preset name | Nozzle / first layer | K | Flow ratio | MVS | Base |
+|---|---|---|---|---|---|---|
+| Matte Purple (REF) | measured (this doc) | 190 / 210 °C | 0.10 in JSON, about 0.04 per later tests | 1.03 | 2.5 cap, at least 3.0 seen | Generic PLA A1 0.2 |
+| Silk Holly Green (G set) | "Calibrated" | 220 / 230 °C | 0.04 | 0.98 | 4 | Elegoo PLA Silk |
+| Silk Red (I set) | "ESTIMATED" | 220 / 230 °C | 0.04 | 0.98 | 4 | Elegoo PLA Silk |
+| Orange (O set) is **Rapid PLA+** (user, 2026-10-09); the preset is still based on plain Elegoo PLA | "ESTIMATED" | 220 / 230 °C | 0.04 | 0.98 | 4 | Elegoo PLA (wrong family) |
+| Pink | "ESTIMATED" | 220 / 230 °C | 0.04 | 0.98 | 4 | Elegoo PLA |
+| Matte Lavender (N set, and the Bingo Anti Curl preset) | "ESTIMATED" | 220 / 230 °C, fan 100 in the Bingo preset | 0.04 | 0.98 | 4 | Elegoo PLA Matte |
+| Keytec PLA Silk Grey (screws) | "Calibrated (PA test)" | 230 / 230 °C | 0.025 | 0.98 | 2 | Elegoo PLA Silk |
+
+- Orange is Rapid PLA+, so section 3.1 applies to it: temperature T_ref + 10 (so 200 °C on the 0.2 nozzle, plus 5 for fast prints), K about 0.8 × K_ref, MVS about 1.15 × MVS_ref, fan up to 100. Run an MVS test on it before trusting those. The current 220 °C preset is far above that.
+- **Derived settings applied 2026-10-09** (`cli_r4/bingo/filament_offsets.py`, Orca user presets backed up to `cli_r4/preset_backup`). Basis: the reference (190 / 210 °C, K 0.04 provisional, flow 1.03, MVS cap 2.5) plus Elegoo's own system profiles, where Silk is +10 °C over Matte with the same MVS, and Rapid PLA+ has MVS 21 against Matte 16.
+
+  | Filament | Nozzle / first layer | K | Flow | MVS | Fan min/max |
+  |---|---|---|---|---|---|
+  | Matte (Purple, Lavender) | 190 / 210 °C | 0.04 | 1.03 | 2.5 | 60 / 80 |
+  | Silk (Red, Green) | 200 / 220 °C | 0.04 | 1.03 | 2.5 | 60 / 80 |
+  | Rapid PLA+ (Orange) | 205 / 220 °C | 0.032 | 1.03 | 2.9 | 60 / 100 |
+  | Plain PLA (Pink) | 190 / 210 °C | 0.04 | 1.03 | 2.25 | 50 / 100 |
+  | Keytec Silk Grey | unchanged (230 °C, K 0.025, flow 0.98, MVS 2): it has its own PA test | | | | |
+
+  These are predictions, not measurements. They sit well below the old 220 °C presets, and the reference 190 °C was the bottom of its tower, so check the first print of each colour for weak layer bonding and dull or under-extruded walls before the rest.
+- Bed: textured plate 65 °C and smooth 60 °C for all of these. The REF uses 60 °C.
+- The Silk Green and Keytec Grey presets are the only others labelled as calibrated. I can't find the measurements behind either label (the Keytec one only says "PA test", so K 0.025 is the one value that came from a test).
+- The 0.04 / 0.98 / MVS 4 values are identical across every ESTIMATED colour, so they are a shared starting guess, not per-colour results.
+- The Bingo print jobs actually used 0.10 mm layers with the fast-settings block (outer wall 120 mm/s, accelerations 5000 to 8000), which none of these presets were calibrated at. The first 8 mm purple pair fitted at that setting.
 
 ---
 
